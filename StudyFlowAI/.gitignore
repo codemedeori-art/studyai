@@ -1,27 +1,14 @@
-# Dependencies
-node_modules
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# dependencies
+node_modules/
 
-# Environment variables
+# production builds
+dist/
+build/
+
+# environment variables
 .env
 .env.local
-.env.development.local
-.env.test.local
-.env.production.local
 
-# Build output
-dist
-build
-
-# IDE
-.vscode
-.idea
-*.swp
-*.swo
-*~
-
-# OS
+# misc
 .DS_Store
-Thumbs.db
+npm-debug.log*

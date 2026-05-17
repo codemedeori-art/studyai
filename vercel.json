@@ -1,0 +1,10 @@
+{
+  "buildCommand": "cd StudyFlowAI && npm install && npm run build",
+  "outputDirectory": "StudyFlowAI/dist",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,0 +1,995 @@
+=====================================
+STUDYFLOW AI - COMPLETE SOURCE CODE PART 3
+=====================================
+
+=====================================
+FILE 25: src/pages/DashboardPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/DashboardPage.jsx
+
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import {
+  BookOpen,
+  CheckCircle2,
+  TrendingUp,
+  Zap,
+  Calendar
+} from 'lucide-react'
+import { Sidebar } from '../components/Sidebar'
+import { Header } from '../components/Header'
+import { Card } from '../components/Card'
+import { Button } from '../components/Button'
+import { useAuth } from '../context/AuthContext'
+import { getUserTasks, getUserAnalytics } from '../services/firestoreService'
+import { generateMotivationalQuote } from '../services/geminiService'
+import { usePomodoroTimer } from '../hooks/usePomodoroTimer'
+
+export function DashboardPage() {
+  const { user } = useAuth()
+  const [tasks, setTasks] = useState([])
+  const [analytics, setAnalytics] = useState(null)
+  const [quote, setQuote] = useState('')
+  const [loading, setLoading] = useState(true)
+  const { minutes, seconds, isActive, toggle, reset } = usePomodoroTimer()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        if (user?.uid) {
+          const tasksData = await getUserTasks(user.uid)
+          setTasks(tasksData.slice(0, 5))
+          
+          const analyticsData = await getUserAnalytics(user.uid)
+          setAnalytics(analyticsData)
+        }
+
+        const motivationalQuote = await generateMotivationalQuote()
+        setQuote(motivationalQuote)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [user])
+
+  const completedTasks = tasks.filter(t => t.completed).length
+  const completionRate = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-0">
+        <Header />
+        
+        <main className="p-4 md:p-8 max-w-7xl mx-auto">
+          {/* Welcome Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold mb-2">Welcome back, {user?.displayName || 'Student'}!</h1>
+            <p className="text-slate-400">Keep pushing towards your goals</p>
+          </motion.div>
+
+          {/* Motivational Quote */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.1 }}
+            className="glassmorphism p-6 rounded-lg mb-8 border-l-4 border-accent"
+          >
+            <p className="text-lg font-semibold italic">""{quote}""</p>
+          </motion.div>
+
+          {/* Stats Grid */}
+          <div className="grid md:grid-cols-4 gap-6 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-400 mb-1">Total Tasks</p>
+                    <p className="text-2xl font-bold">{tasks.length}</p>
+                  </div>
+                  <BookOpen size={32} className="text-primary" />
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-400 mb-1">Completed</p>
+                    <p className="text-2xl font-bold">{completedTasks}</p>
+                  </div>
+                  <CheckCircle2 size={32} className="text-accent" />
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+            >
+              <Card>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-400 mb-1">Completion</p>
+                    <p className="text-2xl font-bold">{completionRate}%</p>
+                  </div>
+                  <TrendingUp size={32} className="text-blue-500" />
+                </div>
+              </Card>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <Card>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-slate-400 mb-1">Study Hours</p>
+                    <p className="text-2xl font-bold">{analytics?.studyHours || 0}h</p>
+                  </div>
+                  <Zap size={32} className="text-primary" />
+                </div>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* Pomodoro Timer */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="mb-8"
+          >
+            <Card>
+              <h3 className="text-xl font-bold mb-6">Focus Timer</h3>
+              <div className="flex flex-col items-center">
+                <div className="text-6xl font-bold font-mono mb-8 text-accent">
+                  {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                </div>
+                <div className="flex gap-4">
+                  <Button
+                    variant={isActive ? 'secondary' : 'primary'}
+                    onClick={toggle}
+                  >
+                    {isActive ? 'Pause' : 'Start'}
+                  </Button>
+                  <Button variant="secondary" onClick={reset}>
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {/* Today's Tasks */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+          >
+            <Card>
+              <h3 className="text-xl font-bold mb-4">Today's Tasks</h3>
+              {tasks.length === 0 ? (
+                <p className="text-slate-400">No tasks yet. Create one to get started!</p>
+              ) : (
+                <div className="space-y-3">
+                  {tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 p-3 rounded-lg hover:bg-darkCard/50 transition"
+                    >
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer ${
+                        task.completed
+                          ? 'bg-accent border-accent'
+                          : 'border-slate-600'
+                      }`}>
+                        {task.completed && <CheckCircle2 size={16} className="text-dark" />}
+                      </div>
+                      <span className={task.completed ? 'line-through text-slate-500' : ''}>
+                        {task.title}
+                      </span>
+                      {task.dueDate && (
+                        <span className="ml-auto flex items-center gap-1 text-sm text-slate-400">
+                          <Calendar size={14} />
+                          {new Date(task.dueDate).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </Card>
+          </motion.div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default DashboardPage
+
+=====================================
+FILE 26: src/pages/StudyPlannerPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/StudyPlannerPage.jsx
+
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Plus, X, Wand2 } from 'lucide-react'
+import { Sidebar } from '../components/Sidebar'
+import { Header } from '../components/Header'
+import { Card } from '../components/Card'
+import { Button } from '../components/Button'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useAuth } from '../context/AuthContext'
+import { generateStudySchedule } from '../services/geminiService'
+import { createStudyPlan } from '../services/firestoreService'
+
+export function StudyPlannerPage() {
+  const { user } = useAuth()
+  const [subjects, setSubjects] = useState([])
+  const [subjectInput, setSubjectInput] = useState('')
+  const [examDates, setExamDates] = useState([])
+  const [examInput, setExamInput] = useState('')
+  const [weakTopics, setWeakTopics] = useState([])
+  const [weakInput, setWeakInput] = useState('')
+  const [availableHours, setAvailableHours] = useState(5)
+  const [loading, setLoading] = useState(false)
+  const [generatedSchedule, setGeneratedSchedule] = useState(null)
+
+  const addSubject = () => {
+    if (subjectInput.trim()) {
+      setSubjects([...subjects, subjectInput])
+      setSubjectInput('')
+    }
+  }
+
+  const removeSubject = (index) => {
+    setSubjects(subjects.filter((_, i) => i !== index))
+  }
+
+  const addExam = () => {
+    if (examInput.trim()) {
+      setExamDates([...examDates, examInput])
+      setExamInput('')
+    }
+  }
+
+  const removeExam = (index) => {
+    setExamDates(examDates.filter((_, i) => i !== index))
+  }
+
+  const addWeakTopic = () => {
+    if (weakInput.trim()) {
+      setWeakTopics([...weakTopics, weakInput])
+      setWeakInput('')
+    }
+  }
+
+  const removeWeakTopic = (index) => {
+    setWeakTopics(weakTopics.filter((_, i) => i !== index))
+  }
+
+  const generateSchedule = async () => {
+    if (subjects.length === 0 || examDates.length === 0 || availableHours === 0) {
+      toast.error('Please fill all required fields')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const schedule = await generateStudySchedule(
+        subjects,
+        examDates,
+        weakTopics,
+        availableHours
+      )
+      setGeneratedSchedule(schedule)
+
+      // Save to Firebase
+      if (user?.uid) {
+        await createStudyPlan(user.uid, {
+          subjects,
+          examDates,
+          weakTopics,
+          availableHours,
+          schedule,
+          createdAt: new Date()
+        })
+      }
+
+      toast.success('Study schedule generated!')
+    } catch (error) {
+      toast.error('Failed to generate schedule')
+      console.error(error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-0">
+        <Header />
+        
+        <main className="p-4 md:p-8 max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8"
+          >
+            <h1 className="text-3xl font-bold mb-2">Study Planner</h1>
+            <p className="text-slate-400">Create a personalized study schedule powered by AI</p>
+          </motion.div>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Input Form */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-1"
+            >
+              <Card className="sticky top-20">
+                <h2 className="text-xl font-bold mb-6">Study Details</h2>
+
+                {/* Subjects */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Subjects</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={subjectInput}
+                      onChange={(e) => setSubjectInput(e.target.value)}
+                      placeholder="e.g., Mathematics"
+                      className="flex-1 px-3 py-2 rounded-lg bg-darkInput border border-slate-600 focus:border-primary outline-none"
+                      onKeyPress={(e) => e.key === 'Enter' && addSubject()}
+                    />
+                    <Button size="sm" variant="primary" onClick={addSubject}>
+                      <Plus size={18} />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {subjects.map((subject, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary text-sm"
+                      >
+                        {subject}
+                        <button
+                          onClick={() => removeSubject(index)}
+                          className="hover:text-red-400"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Exam Dates */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Exam Dates</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={examInput}
+                      onChange={(e) => setExamInput(e.target.value)}
+                      placeholder="e.g., Jan 15, 2024"
+                      className="flex-1 px-3 py-2 rounded-lg bg-darkInput border border-slate-600 focus:border-primary outline-none"
+                      onKeyPress={(e) => e.key === 'Enter' && addExam()}
+                    />
+                    <Button size="sm" variant="primary" onClick={addExam}>
+                      <Plus size={18} />
+                    </Button>
+                  </div>
+                  <div className="space-y-2">
+                    {examDates.map((date, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between px-3 py-2 rounded-lg bg-darkCard"
+                      >
+                        <span className="text-sm">{date}</span>
+                        <button
+                          onClick={() => removeExam(index)}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Weak Topics */}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium mb-2">Weak Topics</label>
+                  <div className="flex gap-2 mb-3">
+                    <input
+                      type="text"
+                      value={weakInput}
+                      onChange={(e) => setWeakInput(e.target.value)}
+                      placeholder="e.g., Calculus"
+                      className="flex-1 px-3 py-2 rounded-lg bg-darkInput border border-slate-600 focus:border-primary outline-none"
+                      onKeyPress={(e) => e.key === 'Enter' && addWeakTopic()}
+                    />
+                    <Button size="sm" variant="primary" onClick={addWeakTopic}>
+                      <Plus size={18} />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {weakTopics.map((topic, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 px-3 py-1 rounded-full bg-red-900/20 text-red-400 text-sm"
+                      >
+                        {topic}
+                        <button
+                          onClick={() => removeWeakTopic(index)}
+                          className="hover:text-red-300"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Available Hours */}
+                <div className="mb-8">
+                  <label className="block text-sm font-medium mb-2">
+                    Daily Study Hours: <span className="text-accent">{availableHours}h</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="12"
+                    value={availableHours}
+                    onChange={(e) => setAvailableHours(parseInt(e.target.value))}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Generate Button */}
+                <Button
+                  variant="accent"
+                  size="full"
+                  onClick={generateSchedule}
+                  disabled={loading}
+                  className="flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <LoadingSpinner size="sm" />
+                  ) : (
+                    <>
+                      <Wand2 size={18} />
+                      Generate Schedule
+                    </>
+                  )}
+                </Button>
+              </Card>
+            </motion.div>
+
+            {/* Generated Schedule */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="lg:col-span-2"
+            >
+              {generatedSchedule ? (
+                <Card>
+                  <h2 className="text-2xl font-bold mb-6">Your AI-Generated Schedule</h2>
+                  <div className="prose prose-invert max-w-none text-slate-300 whitespace-pre-wrap">
+                    {generatedSchedule}
+                  </div>
+                </Card>
+              ) : (
+                <Card className="h-full flex items-center justify-center">
+                  <div className="text-center">
+                    <Wand2 size={48} className="text-slate-600 mx-auto mb-4" />
+                    <p className="text-slate-400">
+                      Fill in your details and click "Generate Schedule" to get your personalized AI-powered study plan
+                    </p>
+                  </div>
+                </Card>
+              )}
+            </motion.div>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default StudyPlannerPage
+
+=====================================
+FILE 27: src/pages/AIAssistantPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/AIAssistantPage.jsx
+
+import React, { useState, useEffect, useRef } from 'react'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Send, Plus } from 'lucide-react'
+import { Sidebar } from '../components/Sidebar'
+import { Header } from '../components/Header'
+import { Card } from '../components/Card'
+import { Button } from '../components/Button'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+import { useAuth } from '../context/AuthContext'
+import { askAIAssistant, generateMotivationalQuote } from '../services/geminiService'
+import { saveChatMessage, getUserChats } from '../services/firestoreService'
+
+export function AIAssistantPage() {
+  const { user } = useAuth()
+  const [messages, setMessages] = useState([])
+  const [input, setInput] = useState('')
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef(null)
+
+  const suggestedPrompts = [
+    'How can I improve my study habits?',
+    'What is the Pomodoro technique?',
+    'How do I manage exam anxiety?',
+    'What is the best way to take notes?'
+  ]
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  useEffect(() => {
+    const loadChats = async () => {
+      try {
+        if (user?.uid) {
+          const chats = await getUserChats(user.uid)
+          const formattedMessages = chats.flatMap(chat => [
+            { type: 'user', text: chat.message },
+            { type: 'ai', text: chat.response }
+          ])
+          setMessages(formattedMessages)
+        }
+      } catch (error) {
+        console.error('Error loading chats:', error)
+      }
+    }
+
+    loadChats()
+  }, [user])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const handleSendMessage = async (text = input) => {
+    if (!text.trim()) return
+
+    const userMessage = text
+    setInput('')
+    setMessages(prev => [...prev, { type: 'user', text: userMessage }])
+    setLoading(true)
+
+    try {
+      const response = await askAIAssistant(userMessage)
+      setMessages(prev => [...prev, { type: 'ai', text: response }])
+
+      if (user?.uid) {
+        await saveChatMessage(user.uid, userMessage, response)
+      }
+    } catch (error) {
+      toast.error('Failed to get response')
+      console.error(error)
+      setMessages(prev => prev.slice(0, -1))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-0">
+        <Header />
+        
+        <main className="p-4 md:p-8 max-w-4xl mx-auto h-[calc(100vh-80px)] flex flex-col">
+          {/* Title */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6"
+          >
+            <h1 className="text-3xl font-bold mb-2">Study Assistant</h1>
+            <p className="text-slate-400">Chat with AI powered by Google Gemini</p>
+          </motion.div>
+
+          {/* Messages Container */}
+          <div className="flex-1 overflow-y-auto mb-6 space-y-4">
+            {messages.length === 0 ? (
+              <div className="h-full flex items-center justify-center">
+                <div className="text-center">
+                  <div className="text-5xl mb-4">🎓</div>
+                  <h2 className="text-2xl font-bold mb-4">How can I help you?</h2>
+                  <p className="text-slate-400 mb-8">Ask me anything about studying, productivity, or exam preparation</p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {suggestedPrompts.map((prompt, index) => (
+                      <motion.button
+                        key={index}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => handleSendMessage(prompt)}
+                        className="p-3 rounded-lg glassmorphism hover:bg-darkCard transition text-left"
+                      >
+                        <p className="text-sm">{prompt}</p>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                {messages.map((message, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-xs lg:max-w-md px-4 py-3 rounded-lg ${
+                        message.type === 'user'
+                          ? 'bg-primary text-white'
+                          : 'glassmorphism'
+                      }`}
+                    >
+                      <p className="text-sm">{message.text}</p>
+                    </div>
+                  </motion.div>
+                ))}
+                {loading && (
+                  <div className="flex justify-start">
+                    <div className="glassmorphism px-4 py-3 rounded-lg">
+                      <LoadingSpinner size="sm" />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </>
+            )}
+          </div>
+
+          {/* Input Area */}
+          <div className="glassmorphism p-4 rounded-lg">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                placeholder="Ask me something..."
+                className="flex-1 bg-transparent outline-none"
+                disabled={loading}
+              />
+              <Button
+                onClick={() => handleSendMessage()}
+                disabled={loading || !input.trim()}
+                className="flex items-center gap-2"
+              >
+                <Send size={18} />
+              </Button>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default AIAssistantPage
+
+=====================================
+FILE 28: src/pages/HabitTrackerPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/HabitTrackerPage.jsx
+
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Plus, Flame, CheckCircle2, Trash2 } from 'lucide-react'
+import { Sidebar } from '../components/Sidebar'
+import { Header } from '../components/Header'
+import { Card } from '../components/Card'
+import { Button } from '../components/Button'
+import { useAuth } from '../context/AuthContext'
+import { createHabit, getUserHabits, updateHabit, deleteHabit } from '../services/firestoreService'
+
+export function HabitTrackerPage() {
+  const { user } = useAuth()
+  const [habits, setHabits] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [habitName, setHabitName] = useState('')
+  const [frequency, setFrequency] = useState('daily')
+
+  useEffect(() => {
+    const loadHabits = async () => {
+      try {
+        if (user?.uid) {
+          const habitsData = await getUserHabits(user.uid)
+          setHabits(habitsData)
+        }
+      } catch (error) {
+        console.error('Error loading habits:', error)
+      }
+    }
+
+    loadHabits()
+  }, [user])
+
+  const handleAddHabit = async (e) => {
+    e.preventDefault()
+    if (!habitName.trim()) {
+      toast.error('Please enter a habit name')
+      return
+    }
+
+    try {
+      const habitId = await createHabit(user.uid, {
+        name: habitName,
+        frequency,
+        completed: [],
+        streak: 0
+      })
+      
+      setHabits([...habits, {
+        id: habitId,
+        name: habitName,
+        frequency,
+        completed: [],
+        streak: 0
+      }])
+      
+      setHabitName('')
+      setShowForm(false)
+      toast.success('Habit added!')
+    } catch (error) {
+      toast.error('Failed to add habit')
+      console.error(error)
+    }
+  }
+
+  const handleCompleteHabit = async (habitId, habit) => {
+    try {
+      const today = new Date().toDateString()
+      const completed = habit.completed || []
+      
+      if (completed.includes(today)) {
+        const updated = completed.filter(d => d !== today)
+        await updateHabit(habitId, { completed: updated })
+        setHabits(habits.map(h => h.id === habitId ? { ...h, completed: updated } : h))
+      } else {
+        const updated = [...completed, today]
+        await updateHabit(habitId, { completed: updated })
+        setHabits(habits.map(h => h.id === habitId ? { ...h, completed: updated } : h))
+        toast.success('Great job! Keep it up!')
+      }
+    } catch (error) {
+      toast.error('Failed to update habit')
+      console.error(error)
+    }
+  }
+
+  const handleDeleteHabit = async (habitId) => {
+    try {
+      await deleteHabit(habitId)
+      setHabits(habits.filter(h => h.id !== habitId))
+      toast.success('Habit deleted')
+    } catch (error) {
+      toast.error('Failed to delete habit')
+      console.error(error)
+    }
+  }
+
+  const getStreakCount = (completed) => {
+    if (!completed || completed.length === 0) return 0
+    
+    const dates = completed.map(d => new Date(d)).sort((a, b) => b - a)
+    let streak = 0
+    let currentDate = new Date()
+    
+    for (const date of dates) {
+      const diffTime = currentDate - date
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays === streak) {
+        streak++
+        currentDate = date
+      } else {
+        break
+      }
+    }
+    
+    return streak
+  }
+
+  const isCompletedToday = (completed) => {
+    if (!completed) return false
+    const today = new Date().toDateString()
+    return completed.includes(today)
+  }
+
+  return (
+    <div className="flex min-h-screen">
+      <Sidebar />
+      <div className="flex-1 lg:ml-0">
+        <Header />
+        
+        <main className="p-4 md:p-8 max-w-6xl mx-auto">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between mb-8"
+          >
+            <div>
+              <h1 className="text-3xl font-bold mb-2">Habit Tracker</h1>
+              <p className="text-slate-400">Build consistency, one day at a time</p>
+            </div>
+            <Button
+              variant="accent"
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center gap-2"
+            >
+              <Plus size={20} />
+              New Habit
+            </Button>
+          </motion.div>
+
+          {/* Add Habit Form */}
+          {showForm && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <Card>
+                <form onSubmit={handleAddHabit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Habit Name</label>
+                    <input
+                      type="text"
+                      value={habitName}
+                      onChange={(e) => setHabitName(e.target.value)}
+                      placeholder="e.g., Morning meditation"
+                      className="w-full px-4 py-2 rounded-lg bg-darkInput border border-slate-600 focus:border-primary outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Frequency</label>
+                    <select
+                      value={frequency}
+                      onChange={(e) => setFrequency(e.target.value)}
+                      className="w-full px-4 py-2 rounded-lg bg-darkInput border border-slate-600 focus:border-primary outline-none"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button type="submit" variant="primary" size="full">
+                      Add Habit
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="full"
+                      onClick={() => setShowForm(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </form>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Habits Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {habits.map((habit, index) => {
+              const streak = getStreakCount(habit.completed)
+              const completedToday = isCompletedToday(habit.completed)
+
+              return (
+                <motion.div
+                  key={habit.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card>
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-lg font-bold">{habit.name}</h3>
+                      <button
+                        onClick={() => handleDeleteHabit(habit.id)}
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+
+                    {/* Streak */}
+                    <div className="flex items-center gap-2 mb-4">
+                      <Flame size={20} className="text-orange-500" />
+                      <span className="text-2xl font-bold">{streak}</span>
+                      <span className="text-slate-400">day streak</span>
+                    </div>
+
+                    {/* Complete Button */}
+                    <Button
+                      variant={completedToday ? 'accent' : 'secondary'}
+                      size="full"
+                      onClick={() => handleCompleteHabit(habit.id, habit)}
+                      className="flex items-center justify-center gap-2"
+                    >
+                      {completedToday ? (
+                        <>
+                          <CheckCircle2 size={18} />
+                          Completed Today
+                        </>
+                      ) : (
+                        'Mark Complete'
+                      )}
+                    </Button>
+                  </Card>
+                </motion.div>
+              )
+            })}
+          </div>
+
+          {habits.length === 0 && !showForm && (
+            <Card className="text-center py-12">
+              <p className="text-slate-400 mb-4">No habits yet. Create one to get started!</p>
+              <Button
+                variant="primary"
+                onClick={() => setShowForm(true)}
+                className="inline-flex items-center gap-2"
+              >
+                <Plus size={18} />
+                Add First Habit
+              </Button>
+            </Card>
+          )}
+        </main>
+      </div>
+    </div>
+  )
+}
+
+export default HabitTrackerPage
+

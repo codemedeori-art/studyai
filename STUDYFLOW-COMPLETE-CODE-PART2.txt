@@ -1,0 +1,973 @@
+=====================================
+STUDYFLOW AI - COMPLETE SOURCE CODE PART 2
+=====================================
+
+=====================================
+FILE 14: src/components/Button.jsx
+=====================================
+Path: StudyFlowAI/src/components/Button.jsx
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import clsx from 'clsx'
+
+export function Button({
+  children,
+  variant = 'primary',
+  size = 'md',
+  className = '',
+  ...props
+}) {
+  const baseClass = 'font-semibold rounded-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed'
+  
+  const variants = {
+    primary: 'btn-gradient text-white',
+    secondary: 'bg-darkCard border border-slate-600 text-white hover:border-primary',
+    accent: 'btn-accent text-white',
+    outline: 'border border-primary text-primary hover:bg-primary hover:text-white'
+  }
+
+  const sizes = {
+    sm: 'px-3 py-1.5 text-sm',
+    md: 'px-6 py-2.5 text-base',
+    lg: 'px-8 py-3 text-lg',
+    full: 'w-full px-6 py-3 text-base'
+  }
+
+  return (
+    <motion.button
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      className={clsx(baseClass, variants[variant], sizes[size], className)}
+      {...props}
+    >
+      {children}
+    </motion.button>
+  )
+}
+
+export default Button
+
+=====================================
+FILE 15: src/components/Card.jsx
+=====================================
+Path: StudyFlowAI/src/components/Card.jsx
+
+import React from 'react'
+import { motion } from 'framer-motion'
+import clsx from 'clsx'
+
+export function Card({ children, className = '', hover = true, ...props }) {
+  return (
+    <motion.div
+      initial={hover ? { opacity: 0, y: 10 } : {}}
+      animate={hover ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.3 }}
+      whileHover={hover ? { y: -5 } : {}}
+      className={clsx(
+        'glassmorphism p-6 rounded-lg',
+        hover && 'cursor-pointer',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+export default Card
+
+=====================================
+FILE 16: src/components/LoadingSpinner.jsx
+=====================================
+Path: StudyFlowAI/src/components/LoadingSpinner.jsx
+
+import React from 'react'
+import { motion } from 'framer-motion'
+
+export function LoadingSpinner({ size = 'md' }) {
+  const sizeClass = {
+    sm: 'w-6 h-6',
+    md: 'w-10 h-10',
+    lg: 'w-16 h-16'
+  }
+
+  return (
+    <motion.div
+      animate={{ rotate: 360 }}
+      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+      className={`${sizeClass[size]} border-4 border-slate-600 border-t-primary rounded-full`}
+    />
+  )
+}
+
+export default LoadingSpinner
+
+=====================================
+FILE 17: src/components/Sidebar.jsx
+=====================================
+Path: StudyFlowAI/src/components/Sidebar.jsx
+
+import React, { useState } from 'react'
+import { Link, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+  Menu,
+  X,
+  BarChart3,
+  BookOpen,
+  Clock,
+  MessageCircle,
+  Settings,
+  LogOut,
+  CheckCircle2,
+  Zap
+} from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+
+export function Sidebar() {
+  const [isOpen, setIsOpen] = useState(false)
+  const location = useLocation()
+  const { logout } = useAuth()
+
+  const menuItems = [
+    { icon: BarChart3, label: 'Dashboard', href: '/dashboard' },
+    { icon: BookOpen, label: 'Study Planner', href: '/planner' },
+    { icon: MessageCircle, label: 'AI Assistant', href: '/assistant' },
+    { icon: CheckCircle2, label: 'Habits', href: '/habits' },
+    { icon: Zap, label: 'Analytics', href: '/analytics' },
+    { icon: Settings, label: 'Settings', href: '/settings' }
+  ]
+
+  const isActive = (href) => location.pathname === href
+
+  const handleLogout = async () => {
+    try {
+      await logout()
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+  }
+
+  return (
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg glassmorphism"
+      >
+        {isOpen ? <X size={24} /> : <Menu size={24} />}
+      </button>
+
+      {/* Sidebar */}
+      <motion.aside
+        initial={false}
+        animate={{ x: isOpen ? 0 : -300 }}
+        className="fixed left-0 top-0 h-screen w-64 glassmorphism lg:static lg:translate-x-0 z-40 pt-20 lg:pt-0 overflow-y-auto"
+      >
+        {/* Logo */}
+        <div className="px-6 py-8 border-b border-slate-700">
+          <h1 className="text-2xl font-bold gradient-text">StudyFlow AI</h1>
+        </div>
+
+        {/* Menu Items */}
+        <nav className="p-4 space-y-2">
+          {menuItems.map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => setIsOpen(false)}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-300 ${
+                  isActive(item.href)
+                    ? 'bg-primary text-white'
+                    : 'text-slate-300 hover:bg-darkCard'
+                }`}
+              >
+                <Icon size={20} />
+                <span className="font-medium">{item.label}</span>
+              </Link>
+            )
+          })}
+        </nav>
+
+        {/* Logout Button */}
+        <div className="absolute bottom-6 left-4 right-4">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-red-900/20 text-red-400 hover:bg-red-900/40 transition-all"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Logout</span>
+          </button>
+        </div>
+      </motion.aside>
+
+      {/* Overlay */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 lg:hidden z-30"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+    </>
+  )
+}
+
+export default Sidebar
+
+=====================================
+FILE 18: src/components/Header.jsx
+=====================================
+Path: StudyFlowAI/src/components/Header.jsx
+
+import React, { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Moon, Sun, Bell } from 'lucide-react'
+import { useTheme } from '../context/ThemeContext'
+import { useAuth } from '../context/AuthContext'
+
+export function Header() {
+  const { isDark, toggleTheme } = useTheme()
+  const { user } = useAuth()
+  const [notifications, setNotifications] = useState(0)
+
+  return (
+    <header className="sticky top-0 z-30 glassmorphism border-b border-slate-700">
+      <div className="flex items-center justify-between px-6 py-4">
+        {/* Left Side */}
+        <div>
+          <h2 className="text-xl font-bold text-white hidden md:block">
+            Welcome back!
+          </h2>
+        </div>
+
+        {/* Right Side */}
+        <div className="flex items-center gap-4">
+          {/* Notifications */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            className="relative p-2 rounded-lg hover:bg-darkCard transition-colors"
+          >
+            <Bell size={20} />
+            {notifications > 0 && (
+              <span className="absolute top-0 right-0 w-5 h-5 bg-accent rounded-full text-xs flex items-center justify-center text-dark font-bold">
+                {notifications}
+              </span>
+            )}
+          </motion.button>
+
+          {/* Theme Toggle */}
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className="p-2 rounded-lg hover:bg-darkCard transition-colors"
+          >
+            {isDark ? <Sun size={20} /> : <Moon size={20} />}
+          </motion.button>
+
+          {/* User Avatar */}
+          <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center font-bold text-white">
+            {user?.email?.[0]?.toUpperCase() || 'U'}
+          </div>
+        </div>
+      </div>
+    </header>
+  )
+}
+
+export default Header
+
+=====================================
+FILE 19: src/components/Toast.jsx
+=====================================
+Path: StudyFlowAI/src/components/Toast.jsx
+
+import { Toaster } from 'react-hot-toast'
+
+export function ToastProvider() {
+  return (
+    <Toaster
+      position="top-right"
+      toastOptions={{
+        success: {
+          style: {
+            background: '#22c55e',
+            color: '#fff'
+          }
+        },
+        error: {
+          style: {
+            background: '#ef4444',
+            color: '#fff'
+          }
+        }
+      }}
+    />
+  )
+}
+
+export default ToastProvider
+
+=====================================
+FILE 20: src/components/ProtectedRoute.jsx
+=====================================
+Path: StudyFlowAI/src/components/ProtectedRoute.jsx
+
+import React from 'react'
+import { Navigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { LoadingSpinner } from './LoadingSpinner'
+
+export function ProtectedRoute({ children }) {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <LoadingSpinner size="lg" />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />
+  }
+
+  return children
+}
+
+export default ProtectedRoute
+
+=====================================
+FILE 21: src/hooks/usePomodoroTimer.js
+=====================================
+Path: StudyFlowAI/src/hooks/usePomodoroTimer.js
+
+import { useState, useEffect, useCallback } from 'react'
+
+export function usePomodoroTimer() {
+  const [timeLeft, setTimeLeft] = useState(25 * 60)
+  const [isActive, setIsActive] = useState(false)
+  const [isBreak, setIsBreak] = useState(false)
+  const [sessions, setSessions] = useState(0)
+
+  useEffect(() => {
+    let interval = null
+
+    if (isActive && timeLeft > 0) {
+      interval = setInterval(() => {
+        setTimeLeft(timeLeft - 1)
+      }, 1000)
+    } else if (timeLeft === 0 && isActive) {
+      handleSessionComplete()
+    }
+
+    return () => clearInterval(interval)
+  }, [isActive, timeLeft])
+
+  const handleSessionComplete = useCallback(() => {
+    if (isBreak) {
+      setIsBreak(false)
+      setTimeLeft(25 * 60)
+      setIsActive(false)
+      playNotification()
+    } else {
+      setIsBreak(true)
+      setTimeLeft(5 * 60)
+      setSessions(sessions + 1)
+      playNotification()
+    }
+  }, [isBreak, sessions])
+
+  const playNotification = () => {
+    const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj==')
+    audio.play()
+  }
+
+  const toggle = () => setIsActive(!isActive)
+  const reset = () => {
+    setIsActive(false)
+    setIsBreak(false)
+    setTimeLeft(25 * 60)
+  }
+
+  const minutes = Math.floor(timeLeft / 60)
+  const seconds = timeLeft % 60
+
+  return {
+    minutes,
+    seconds,
+    isActive,
+    isBreak,
+    sessions,
+    toggle,
+    reset
+  }
+}
+
+=====================================
+FILE 22: src/pages/LoginPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/LoginPage.jsx
+
+import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Mail, Lock, Zap } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '../components/Button'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+
+export function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { login, loginWithGoogle } = useAuth()
+  const navigate = useNavigate()
+
+  const handleEmailLogin = async (e) => {
+    e.preventDefault()
+    if (!email || !password) {
+      toast.error('Please fill all fields')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await login(email, password)
+      toast.success('Welcome back!')
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleLogin = async () => {
+    setLoading(true)
+    try {
+      await loginWithGoogle()
+      toast.success('Welcome!')
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-dark flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+            className="inline-block mb-4"
+          >
+            <Zap size={40} className="text-accent" />
+          </motion.div>
+          <h1 className="text-3xl font-bold gradient-text mb-2">StudyFlow AI</h1>
+          <p className="text-slate-400">Smart Study Planner for Students</p>
+        </div>
+
+        {/* Login Form */}
+        <div className="glassmorphism p-8 mb-6 rounded-lg">
+          <h2 className="text-2xl font-bold mb-6">Login</h2>
+
+          <form onSubmit={handleEmailLogin} className="space-y-4">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-darkInput/50 border border-slate-600 focus-within:border-primary">
+                <Mail size={18} className="text-slate-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 bg-transparent outline-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Password</label>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-darkInput/50 border border-slate-600 focus-within:border-primary">
+                <Lock size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="flex-1 bg-transparent outline-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="primary"
+              size="full"
+              disabled={loading}
+              className="mt-6"
+            >
+              {loading ? <LoadingSpinner size="sm" /> : 'Login'}
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-slate-600"></div>
+            <span className="text-sm text-slate-400">Or</span>
+            <div className="flex-1 h-px bg-slate-600"></div>
+          </div>
+
+          {/* Google Login */}
+          <Button
+            type="button"
+            variant="secondary"
+            size="full"
+            onClick={handleGoogleLogin}
+            disabled={loading}
+          >
+            Continue with Google
+          </Button>
+        </div>
+
+        {/* Sign Up Link */}
+        <p className="text-center text-slate-400">
+          Don't have an account?{' '}
+          <Link to="/signup" className="text-primary hover:underline font-semibold">
+            Sign up
+          </Link>
+        </p>
+      </motion.div>
+    </div>
+  )
+}
+
+export default LoginPage
+
+=====================================
+FILE 23: src/pages/SignupPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/SignupPage.jsx
+
+import React, { useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import toast from 'react-hot-toast'
+import { Mail, Lock, User, Zap } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { Button } from '../components/Button'
+import { LoadingSpinner } from '../components/LoadingSpinner'
+
+export function SignupPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const { signup, loginWithGoogle } = useAuth()
+  const navigate = useNavigate()
+
+  const handleSignup = async (e) => {
+    e.preventDefault()
+    
+    if (!email || !password || !confirmPassword) {
+      toast.error('Please fill all fields')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await signup(email, password)
+      toast.success('Account created successfully!')
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignup = async () => {
+    setLoading(true)
+    try {
+      await loginWithGoogle()
+      toast.success('Account created successfully!')
+      navigate('/dashboard')
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-dark flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md"
+      >
+        {/* Header */}
+        <div className="text-center mb-8">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
+            className="inline-block mb-4"
+          >
+            <Zap size={40} className="text-accent" />
+          </motion.div>
+          <h1 className="text-3xl font-bold gradient-text mb-2">StudyFlow AI</h1>
+          <p className="text-slate-400">Join students worldwide</p>
+        </div>
+
+        {/* Signup Form */}
+        <div className="glassmorphism p-8 mb-6 rounded-lg">
+          <h2 className="text-2xl font-bold mb-6">Create Account</h2>
+
+          <form onSubmit={handleSignup} className="space-y-4">
+            {/* Email */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Email</label>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-darkInput/50 border border-slate-600 focus-within:border-primary">
+                <Mail size={18} className="text-slate-400" />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 bg-transparent outline-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Password</label>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-darkInput/50 border border-slate-600 focus-within:border-primary">
+                <Lock size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="flex-1 bg-transparent outline-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-medium mb-2">Confirm Password</label>
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg bg-darkInput/50 border border-slate-600 focus-within:border-primary">
+                <Lock size={18} className="text-slate-400" />
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="flex-1 bg-transparent outline-none"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
+              variant="primary"
+              size="full"
+              disabled={loading}
+              className="mt-6"
+            >
+              {loading ? <LoadingSpinner size="sm" /> : 'Create Account'}
+            </Button>
+          </form>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4 my-6">
+            <div className="flex-1 h-px bg-slate-600"></div>
+            <span className="text-sm text-slate-400">Or</span>
+            <div className="flex-1 h-px bg-slate-600"></div>
+          </div>
+
+          {/* Google Signup */}
+          <Button
+            type="button"
+            variant="secondary"
+            size="full"
+            onClick={handleGoogleSignup}
+            disabled={loading}
+          >
+            Continue with Google
+          </Button>
+        </div>
+
+        {/* Login Link */}
+        <p className="text-center text-slate-400">
+          Already have an account?{' '}
+          <Link to="/login" className="text-primary hover:underline font-semibold">
+            Login
+          </Link>
+        </p>
+      </motion.div>
+    </div>
+  )
+}
+
+export default SignupPage
+
+=====================================
+FILE 24: src/pages/LandingPage.jsx
+=====================================
+Path: StudyFlowAI/src/pages/LandingPage.jsx
+
+import React from 'react'
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import {
+  Zap,
+  BookOpen,
+  Brain,
+  TrendingUp,
+  CheckCircle,
+  ArrowRight,
+  Star
+} from 'lucide-react'
+import { Button } from '../components/Button'
+
+export function LandingPage() {
+  const features = [
+    {
+      icon: Brain,
+      title: 'AI-Powered Scheduling',
+      description: 'Get personalized study schedules powered by Google Gemini AI'
+    },
+    {
+      icon: TrendingUp,
+      title: 'Track Progress',
+      description: 'Monitor your productivity and study habits with detailed analytics'
+    },
+    {
+      icon: Zap,
+      title: 'Pomodoro Timer',
+      description: 'Stay focused with our built-in Pomodoro focus timer'
+    },
+    {
+      icon: BookOpen,
+      title: 'Study Plans',
+      description: 'Create customized study plans for your exams and goals'
+    }
+  ]
+
+  const testimonials = [
+    {
+      name: 'Sarah Chen',
+      role: 'Engineering Student',
+      text: 'StudyFlow AI completely changed my study routine. I improved from 68% to 92%!',
+      avatar: '👩‍🎓'
+    },
+    {
+      name: 'Mike Johnson',
+      role: 'Medical Student',
+      text: 'The AI scheduling is incredibly smart. It understands my weak areas perfectly.',
+      avatar: '👨‍⚕️'
+    },
+    {
+      name: 'Priya Patel',
+      role: 'Data Science Student',
+      text: 'The analytics helped me identify my best study times. Highly recommended!',
+      avatar: '👩‍💻'
+    }
+  ]
+
+  return (
+    <div className="min-h-screen bg-gradient-dark">
+      {/* Navigation */}
+      <nav className="sticky top-0 z-50 glassmorphism border-b border-slate-700">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-4 flex items-center justify-between">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
+            className="inline-block"
+          >
+            <Zap size={32} className="text-accent" />
+          </motion.div>
+          <div className="hidden md:flex gap-8">
+            <a href="#features" className="text-slate-300 hover:text-white transition">Features</a>
+            <a href="#demo" className="text-slate-300 hover:text-white transition">Demo</a>
+            <a href="#testimonials" className="text-slate-300 hover:text-white transition">Testimonials</a>
+          </div>
+          <div className="flex gap-3">
+            <Link to="/login">
+              <Button variant="secondary" size="sm">Login</Button>
+            </Link>
+            <Link to="/signup">
+              <Button variant="primary" size="sm">Get Started</Button>
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="max-w-6xl mx-auto px-4 md:px-6 py-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h1 className="text-5xl md:text-7xl font-bold mb-6">
+            <span className="gradient-text">Study Smarter</span>
+            <br />
+            <span className="text-white">Not Harder</span>
+          </h1>
+          <p className="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
+            AI-powered study planning, habit tracking, and productivity analytics. Join thousands of students improving their grades.
+          </p>
+          <Link to="/signup">
+            <Button variant="primary" size="lg" className="inline-flex items-center gap-2">
+              Start Your Journey <ArrowRight size={20} />
+            </Button>
+          </Link>
+        </motion.div>
+
+        {/* Hero Image */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+          className="mt-16 p-8 glassmorphism rounded-lg"
+        >
+          <div className="bg-gradient-primary rounded-lg h-96 flex items-center justify-center">
+            <BookOpen size={80} className="text-white opacity-50" />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="max-w-6xl mx-auto px-4 md:px-6 py-20">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="text-4xl font-bold text-center mb-16 gradient-text"
+        >
+          Powerful Features
+        </motion.h2>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {features.map((feature, index) => {
+            const Icon = feature.icon
+            return (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="glassmorphism p-6 rounded-lg"
+              >
+                <Icon size={32} className="text-accent mb-4" />
+                <h3 className="text-xl font-bold mb-2">{feature.title}</h3>
+                <p className="text-slate-300">{feature.description}</p>
+              </motion.div>
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Demo Section */}
+      <section id="demo" className="max-w-6xl mx-auto px-4 md:px-6 py-20">
+        <div className="glassmorphism p-12 rounded-lg text-center">
+          <motion.div
+            animate={{ scale: [1, 1.05, 1] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            <Zap size={48} className="text-accent mx-auto mb-4" />
+          </motion.div>
+          <h2 className="text-3xl font-bold mb-4">Ready to Transform Your Studies?</h2>
+          <p className="text-slate-300 mb-8 max-w-xl mx-auto">
+            Start using StudyFlow AI today and see measurable improvements in your productivity and grades.
+          </p>
+          <Link to="/signup">
+            <Button variant="accent" size="lg">Get Started Free</Button>
+          </Link>
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section id="testimonials" className="max-w-6xl mx-auto px-4 md:px-6 py-20">
+        <motion.h2
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          className="text-4xl font-bold text-center mb-16 gradient-text"
+        >
+          Student Success Stories
+        </motion.h2>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          {testimonials.map((testimonial, index) => (
+            <motion.div
+              key={index}
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.1 }}
+              className="glassmorphism p-6 rounded-lg"
+            >
+              <div className="flex gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} size={16} className="text-accent fill-accent" />
+                ))}
+              </div>
+              <p className="text-slate-300 mb-4">"{testimonial.text}"</p>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl">{testimonial.avatar}</span>
+                <div className="text-left">
+                  <p className="font-bold">{testimonial.name}</p>
+                  <p className="text-sm text-slate-400">{testimonial.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-slate-700 mt-20 py-8 text-center text-slate-400">
+        <p>&copy; 2024 StudyFlow AI. All rights reserved.</p>
+      </footer>
+    </div>
+  )
+}
+
+export default LandingPage
+
